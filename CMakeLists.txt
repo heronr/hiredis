@@ -30,7 +30,13 @@ ADD_LIBRARY(hiredis SHARED
     net.c
     read.c
     sds.c
-    sockcompat.c)
+    sockcompat.c
+    adlist.c
+    command.c
+    crc16.c
+    hiarray.c
+    hircluster.c
+    hiutil.c)
 
 SET_TARGET_PROPERTIES(hiredis
     PROPERTIES
