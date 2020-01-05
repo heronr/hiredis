@@ -6,12 +6,23 @@
 #include <errno.h>
 #include <ctype.h>
 
+#include "win32.h"
 #include "hircluster.h"
 #include "hiutil.h"
 #include "adlist.h"
 #include "hiarray.h"
 #include "command.h"
 #include "dict.c"
+
+#define REDIS_ERR_CLUSTER_TOO_MANY_REDIRECT 7
+
+#define REDIS_ERROR_MOVED 			"MOVED"
+#define REDIS_ERROR_ASK 			"ASK"
+#define REDIS_ERROR_TRYAGAIN 		"TRYAGAIN"
+#define REDIS_ERROR_CROSSSLOT 		"CROSSSLOT"
+#define REDIS_ERROR_CLUSTERDOWN 	"CLUSTERDOWN"
+
+#define REDIS_STATUS_OK 			"OK"
 
 #define REDIS_COMMAND_CLUSTER_NODES "CLUSTER NODES"
 #define REDIS_COMMAND_CLUSTER_SLOTS "CLUSTER SLOTS"

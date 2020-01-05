@@ -4,6 +4,10 @@
 #include <stdarg.h>
 #include <stdint.h>
 #include <sys/types.h>
+#if defined(_MSC_VER)
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+#endif
 
 #define HI_OK        0
 #define HI_ERROR    -1
