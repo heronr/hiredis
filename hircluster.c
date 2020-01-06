@@ -216,7 +216,7 @@ static void __redisClusterSetError(redisClusterContext *cc, int type, const char
     } else {
         /* Only REDIS_ERR_IO may lack a description! */
         assert(type == REDIS_ERR_IO);
-        __redis_strerror_r(errno, cc->errstr, sizeof(cc->errstr));
+        strerror_r(errno, cc->errstr, sizeof(cc->errstr));
     }
 }
 
@@ -4252,7 +4252,7 @@ static void __redisClusterAsyncSetError(redisClusterAsyncContext *acc,
     } else {
         /* Only REDIS_ERR_IO may lack a description! */
         assert(type == REDIS_ERR_IO);
-        __redis_strerror_r(errno, acc->errstr, sizeof(acc->errstr));
+        strerror_r(errno, acc->errstr, sizeof(acc->errstr));
     }
 }
 
