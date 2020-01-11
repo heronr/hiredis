@@ -9,11 +9,11 @@
 #endif
 
 #ifndef strcasecmp
-#define strcasecmp stricmp
+#define strcasecmp _stricmp
 #endif
 
 #ifndef strncasecmp
-#define strncasecmp strnicmp
+#define strncasecmp _strnicmp
 #endif
 
 #ifndef va_copy
