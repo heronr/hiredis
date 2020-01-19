@@ -6,15 +6,161 @@
 #include <errno.h>
 #include "win32.h"
 
-#ifndef _MSC_VER
+#ifndef WIN32
 #include <sys/time.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
 #endif
 #include <sys/types.h>
-
 #include "hiutil.h"
 
 #ifdef HI_HAVE_BACKTRACE
 # include <execinfo.h>
+#endif
+
+#ifndef WIN32
+int
+hi_set_blocking(int sd)
+{
+    int flags;
+
+    flags = fcntl(sd, F_GETFL, 0);
+    if (flags < 0) {
+        return flags;
+    }
+
+    return fcntl(sd, F_SETFL, flags & ~O_NONBLOCK);
+}
+
+int
+hi_set_nonblocking(int sd)
+{
+    int flags;
+
+    flags = fcntl(sd, F_GETFL, 0);
+    if (flags < 0) {
+        return flags;
+    }
+
+    return fcntl(sd, F_SETFL, flags | O_NONBLOCK);
+}
+
+int
+hi_set_reuseaddr(int sd)
+{
+    int reuse;
+    socklen_t len;
+
+    reuse = 1;
+    len = sizeof(reuse);
+
+    return setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &reuse, len);
+}
+
+/*
+ * Disable Nagle algorithm on TCP socket.
+ *
+ * This option helps to minimize transmit latency by disabling coalescing
+ * of data to fill up a TCP segment inside the kernel. Sockets with this
+ * option must use readv() or writev() to do data transfer in bulk and
+ * hence avoid the overhead of small packets.
+ */
+int
+hi_set_tcpnodelay(int sd)
+{
+    int nodelay;
+    socklen_t len;
+
+    nodelay = 1;
+    len = sizeof(nodelay);
+
+    return setsockopt(sd, IPPROTO_TCP, TCP_NODELAY, &nodelay, len);
+}
+
+int
+hi_set_linger(int sd, int timeout)
+{
+    struct linger linger;
+    socklen_t len;
+
+    linger.l_onoff = 1;
+    linger.l_linger = timeout;
+
+    len = sizeof(linger);
+
+    return setsockopt(sd, SOL_SOCKET, SO_LINGER, &linger, len);
+}
+
+int
+hi_set_sndbuf(int sd, int size)
+{
+    socklen_t len;
+
+    len = sizeof(size);
+
+    return setsockopt(sd, SOL_SOCKET, SO_SNDBUF, &size, len);
+}
+
+int
+hi_set_rcvbuf(int sd, int size)
+{
+    socklen_t len;
+
+    len = sizeof(size);
+
+    return setsockopt(sd, SOL_SOCKET, SO_RCVBUF, &size, len);
+}
+
+int
+hi_get_soerror(int sd)
+{
+    int status, err;
+    socklen_t len;
+
+    err = 0;
+    len = sizeof(err);
+
+    status = getsockopt(sd, SOL_SOCKET, SO_ERROR, &err, &len);
+    if (status == 0) {
+        errno = err;
+    }
+
+    return status;
+}
+
+int
+hi_get_sndbuf(int sd)
+{
+    int status, size;
+    socklen_t len;
+
+    size = 0;
+    len = sizeof(size);
+
+    status = getsockopt(sd, SOL_SOCKET, SO_SNDBUF, &size, &len);
+    if (status < 0) {
+        return status;
+    }
+
+    return size;
+}
+
+int
+hi_get_rcvbuf(int sd)
+{
+    int status, size;
+    socklen_t len;
+
+    size = 0;
+    len = sizeof(size);
+
+    status = getsockopt(sd, SOL_SOCKET, SO_RCVBUF, &size, &len);
+    if (status < 0) {
+        return status;
+    }
+
+    return size;
+}
 #endif
 
 int
@@ -284,6 +430,70 @@ _scnprintf(char *buf, size_t size, const char *fmt, ...)
 
     return n;
 }
+
+#ifndef WIN32
+/*
+ * Send n bytes on a blocking descriptor
+ */
+ssize_t
+_hi_sendn(int sd, const void *vptr, size_t n)
+{
+    size_t nleft;
+    ssize_t nsend;
+    const char *ptr;
+
+    ptr = vptr;
+    nleft = n;
+    while (nleft > 0) {
+        nsend = send(sd, ptr, nleft, 0);
+        if (nsend < 0) {
+            if (errno == EINTR) {
+                continue;
+            }
+            return nsend;
+        }
+        if (nsend == 0) {
+            return -1;
+        }
+
+        nleft -= (size_t)nsend;
+        ptr += nsend;
+    }
+
+    return (ssize_t)n;
+}
+
+/*
+ * Recv n bytes from a blocking descriptor
+ */
+ssize_t
+_hi_recvn(int sd, void *vptr, size_t n)
+{
+    size_t nleft;
+    ssize_t nrecv;
+    char *ptr;
+
+    ptr = vptr;
+    nleft = n;
+    while (nleft > 0) {
+        nrecv = recv(sd, ptr, nleft, 0);
+        if (nrecv < 0) {
+            if (errno == EINTR) {
+                continue;
+            }
+            return nrecv;
+        }
+        if (nrecv == 0) {
+            break;
+        }
+
+        nleft -= (size_t)nrecv;
+        ptr += nrecv;
+    }
+
+    return (ssize_t)(n - nleft);
+}
+#endif
 
 /*
  * Return the current time in microseconds since Epoch
