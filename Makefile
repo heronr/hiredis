@@ -3,7 +3,7 @@
 # Copyright (C) 2010-2011 Pieter Noordhuis <pcnoordhuis at gmail dot com>
 # This file is released under the BSD license, see the COPYING file
 
-OBJ=net.o hiredis.o sds.o async.o read.o sockcompat.o
+OBJ=net.o hiredis.o sds.o async.o read.o sockcompat.o adlist.o command.o crc16.o dict.o hiarray.o hircluster.o hiutil.o
 SSL_OBJ=ssl.o
 EXAMPLES=hiredis-example hiredis-example-libevent hiredis-example-libev hiredis-example-glib
 ifeq ($(USE_SSL),1)
@@ -95,15 +95,21 @@ all: $(SSL_DYLIBNAME) $(SSL_STLIBNAME) $(SSL_PKGCONFNAME)
 endif
 
 # Deps (use make dep to generate this)
-async.o: async.c fmacros.h async.h hiredis.h read.h sds.h net.h dict.c dict.h
+adlist.o: adlist.c adlist.h hiutil.h
+async.o: async.c fmacros.h async.h hiredis.h read.h sds.h net.h dict.c dict.h win32.h async_private.h
+command.o: command.c command.h hiredis.h read.h sds.h adlist.h hiutil.h hiarray.h
+crc16.o: crc16.c hiutil.h
 dict.o: dict.c fmacros.h dict.h
-hiredis.o: hiredis.c fmacros.h hiredis.h read.h sds.h net.h win32.h
+hiarray.o: hiarray.c hiutil.h hiarray.h
+hircluster.o: hircluster.c fmacros.h win32.h hircluster.h hiredis.h read.h sds.h async.h hiutil.h adlist.h hiarray.h command.h dict.c dict.h
+hiredis.o: hiredis.c fmacros.h hiredis.h read.h sds.h net.h async.h win32.h
+hiutil.o: hiutil.c win32.h hiutil.h
 net.o: net.c fmacros.h net.h hiredis.h read.h sds.h sockcompat.h win32.h
-read.o: read.c fmacros.h read.h sds.h
-sds.o: sds.c sds.h
+read.o: read.c fmacros.h read.h sds.h win32.h
+sds.o: sds.c sds.h sdsalloc.h
 sockcompat.o: sockcompat.c sockcompat.h
-ssl.o: ssl.c hiredis.h
-test.o: test.c fmacros.h hiredis.h read.h sds.h
+ssl.o: ssl.c hiredis.h read.h sds.h async.h async_private.h
+test.o: test.c fmacros.h hiredis.h read.h sds.h net.h
 
 $(DYLIBNAME): $(OBJ)
 	$(DYLIB_MAKE_CMD) -o $(DYLIBNAME) $(OBJ) $(REAL_LDFLAGS)
