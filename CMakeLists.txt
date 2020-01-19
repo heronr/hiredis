@@ -5,6 +5,10 @@ PROJECT(hiredis)
 OPTION(ENABLE_SSL "Build hiredis_ssl for SSL support" OFF)
 OPTION(DISABLE_TESTS "If tests should be compiled or not" OFF)
 
+IF (WIN32 OR MINGW)
+    SET(BUILD_SHARED_LIBS OFF)
+ENDIF()
+
 MACRO(getVersionBit name)
   SET(VERSION_REGEX "^#define ${name} (.+)$")
   FILE(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/hiredis.h"
@@ -23,7 +27,7 @@ PROJECT(hiredis VERSION "${VERSION}")
 
 SET(ENABLE_EXAMPLES OFF CACHE BOOL "Enable building hiredis examples")
 
-ADD_LIBRARY(hiredis SHARED
+ADD_LIBRARY(hiredis
     async.c
     dict.c
     hiredis.c
