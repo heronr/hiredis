@@ -14,7 +14,9 @@
 #include "command.h"
 #include "dict.c"
 
-#define REDIS_ERR_CLUSTER_TOO_MANY_REDIRECT 7
+// Cluster errors are offset by 100 to be sufficiently out of range of
+// standard Redis errors
+#define REDIS_ERR_CLUSTER_TOO_MANY_REDIRECT 100
 
 #define REDIS_ERROR_MOVED 			"MOVED"
 #define REDIS_ERROR_ASK 			"ASK"
