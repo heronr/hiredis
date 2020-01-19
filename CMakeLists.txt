@@ -7,6 +7,7 @@ OPTION(DISABLE_TESTS "If tests should be compiled or not" OFF)
 
 IF (WIN32 OR MINGW)
     SET(BUILD_SHARED_LIBS OFF)
+    ADD_COMPILE_DEFINITIONS(_CRT_SECURE_NO_WARNINGS)
 ENDIF()
 
 MACRO(getVersionBit name)
