@@ -108,7 +108,7 @@ static redisAsyncContext *redisAsyncInitialize(redisContext *c) {
     ac->err = 0;
     ac->errstr = NULL;
     ac->data = NULL;
-    ac->dataHandler = NULL;
+    ac->cleanup = NULL;
 
     ac->ev.data = NULL;
     ac->ev.addRead = NULL;
@@ -299,8 +299,8 @@ static void __redisAsyncFree(redisAsyncContext *ac) {
         }
     }
 
-    if (ac->dataHandler) {
-        ac->dataHandler(ac);
+    if (ac->cleanup) {
+        ac->cleanup(ac);
     }
 
     /* Cleanup self */

@@ -4377,7 +4377,7 @@ redisAsyncContext * actx_get_by_node(redisClusterAsyncContext *acc,
     }
 
     ac->data = node;
-    ac->dataHandler = unlinkAsyncContextAndNode;
+    ac->cleanup = unlinkAsyncContextAndNode;
     node->acon = ac;
     
     return ac;
